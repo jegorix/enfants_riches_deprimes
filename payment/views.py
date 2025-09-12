@@ -21,6 +21,9 @@ import base64
 stripe.api_key = settings.STRIPE_SECRET_KEY
 stripe_endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
 
+HELEKET_API_KEY = settings.HELEKET_API_KEY
+HELEKET_BASE_URL = 'https://api.heleket.com/v1'
+HELEKET_SECRET_KEY =  settings.HELEKET_SECRET_KEY
 
 def create_stripe_checkout_session(order, request):
     cart = CartMixin().get_cart(request)
@@ -76,7 +79,7 @@ def stripe_webhook(request):
         session = event['data']['object']
         order_id = session['metadata'].get('order_id')
         try:
-            order = Order.object.get(id=order_id)
+            order = Order.objects.get(id=order_id)
             order.status = 'processing'
             order.stripe_payment_intent_id = session.get('payment_intent')
             order.save()
@@ -116,3 +119,28 @@ def stripe_cancel(request):
             return TemplateResponse(request, 'payment/stripe_cancel_content.html', context)
         return render(request, 'payment/stripe_cancel.html', context)
     return redirect('orders:checkout')
+
+
+def create_heleket_payment(order, request):
+    cart = CartMixin().get_cart(request)
+    
+    amount_str = f'{order.total_price:.2f}'
+    payload = {
+        'amount': amount_str,
+        'currency': "USDT",
+        'order_id': str(order.id),
+        'callback_url': request.build_absolute_uri('payment/heleket/webhook/'),
+        'description': f'Order #{order.id}',
+        'convert_to': 'USDT',
+    }
+    
+    payload_str = json.dumps(payload, separators=(',', ':'), sort_keys=True)
+    encoded_payload = base64.b64encode(payload_str.encode('utf-8')).decode('utf-8')
+    sign = hashlib.md5((encoded_payload + HELEKET_SECRET_KEY).encode('utf-8')).hexdigest()
+    
+    headers = {
+        'merchant': HELEKET_API_KEY,
+        'sign': sign,
+        'Content-Type': 'application/json',
+    }
+    
