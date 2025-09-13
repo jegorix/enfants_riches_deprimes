@@ -254,8 +254,5 @@ def heleket_cancel(request):
         if request.headers.get('HX-Request'):
             return TemplateResponse(request, 'payment/heleket_cancel_content.html', context)
         return render(request, 'payment/heleket_cancel.html', context)
-    return redirect('orders:checkout')
-
-    
-    
+    return redirect('orders:checkout')    
     
