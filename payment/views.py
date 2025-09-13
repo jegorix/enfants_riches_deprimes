@@ -145,7 +145,7 @@ def create_heleket_payment(order, request):
     }
     
     try:
-        response = request.POST(f'{HELEKET_BASE_URL}/payment', headers=headers, data=payload_str)
+        response = requests.post(f'{HELEKET_BASE_URL}/payment', headers=headers, data=payload_str)
         if response.status_code == 200:
             payment = response.json()
             if payment.get('state') == 0:

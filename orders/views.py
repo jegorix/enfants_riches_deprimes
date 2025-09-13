@@ -27,7 +27,7 @@ class CheckoutView(CartMixin, View):
         if cart.total_items == 0:
             logger.warning("Cart is empty, redirecting to cart page")
             if request.headers.get('HX-Request'):
-                return TemplateRes ponse(request, 'orders/empty_cart.html', {'message': 'Your cart is empty'})
+                return TemplateResponse(request, 'orders/empty_cart.html', {'message': 'Your cart is empty'})
             return redirect('cart:cart_modal')
 
         total_price = cart.subtotal
